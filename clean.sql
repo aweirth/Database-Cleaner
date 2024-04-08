@@ -34,7 +34,8 @@ SELECT
 FROM tran
 WHERE game_data -> 'game' -> 'status' ->> 'detailedState' = 'Final'
 ON CONFLICT (game_id)
-DO NOTHING;
+DO NOTHING
+;
 
 -- Cleaning mlbpre table and inserting clean data into game_odds table
 INSERT INTO game_odds
