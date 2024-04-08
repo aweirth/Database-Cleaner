@@ -1,2 +1,2 @@
-# Database Transformer
-This repo is to serve as a template repository for setting up a Docker container that will run a specific SQL script on whatever database is stored in the `$DATABASE_URL` environment variable. The `clean.sql` file should have valid SQL added for all operations that are desired.
+# Database Cleaner
+This repo contains a Docker container that will run specific SQL script on whatever database is stored in the `$DATABASE_URL` environment variable. The `clean.sql` file has SQL script to clean and transform the raw ingested API data into organized and structured tables.
