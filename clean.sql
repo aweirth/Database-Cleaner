@@ -27,7 +27,7 @@ SELECT
     (bookmaker -> 'markets' -> 0 -> 'outcomes' -> 1 ->> 'name')::text AS team_name_2,
     (bookmaker -> 'markets' -> 0 -> 'outcomes' -> 1 ->> 'price')::numeric AS team_2_price
 FROM json_rows
-ON CONFLICT (game_id)
+ON CONFLICT (game_id, bookmaker)
 DO NOTHING
 ;
 
