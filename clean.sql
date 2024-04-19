@@ -13,14 +13,18 @@ tables. This is to ensure everything runs correctly first. ON CONFLICT DO NOTHIN
 WITH json_rows AS (
     SELECT 
         (raw_json ->> 'id')::TEXT AS game_id,
-  			(raw_json ->> 'commence_time')::timestamp with time zone AS commence_time,
+  			(raw_json ->> 'away_team')::TEXT AS away_team,
+  			(raw_json ->> 'home_team')::TEXT AS home_team,
+  			(raw_json ->> 'commence_time')::timestamp with time zone AT TIME ZONE 'PST' AS commence_time_pst,
         jsonb_array_elements(raw_json -> 'bookmakers') AS bookmaker
     FROM mlbpre
 )
 INSERT INTO prices
 SELECT 
     game_id,
-    commence_time,
+    commence_time_pst,
+    away_team,
+    home_team,
     (bookmaker ->> 'title')::text AS bookmaker,
     (bookmaker -> 'markets' -> 0 -> 'outcomes' -> 0 ->> 'name')::text AS team_name_1,
     (bookmaker -> 'markets' -> 0 -> 'outcomes' -> 0 ->> 'price')::numeric AS team_1_price,
@@ -30,6 +34,7 @@ FROM json_rows
 ON CONFLICT (game_id, bookmaker)
 DO NOTHING
 ;
+
 
 -- GAME KEY TABLE
 
@@ -80,3 +85,52 @@ WHERE
 ON CONFLICT (game_id)
 DO NOTHING
 ;
+
+-- CREATING PROFITS TABLE
+
+INSERT INTO mlb_games_split
+SELECT game_id, official_date, home_name AS team_name,
+       CASE WHEN home_score > away_score THEN TRUE ELSE FALSE END AS is_winner,
+       game_type
+FROM mlb_games
+UNION ALL
+SELECT game_id, official_date, away_name AS team_name,
+       CASE WHEN away_score > home_score THEN TRUE ELSE FALSE END AS is_winner,
+       game_type
+FROM mlb_games
+ORDER BY official_date
+ON CONFLICT (game_id, team_name)
+DO NOTHING
+;
+
+INSERT INTO prices_split
+SELECT game_id, away_team AS team_name, bookmaker, team_1_price AS price
+FROM prices
+UNION ALL
+SELECT game_id, home_team AS team_name, bookmaker, team_2_price AS price
+FROM prices
+;
+
+INSERT INTO profits
+SELECT
+    mgs.game_id,
+    mgs.team_name,
+    mgs.is_winner,
+    mgs.game_type,
+    ps.bookmaker,
+    ps.price
+FROM
+    mlb_games_split mgs
+JOIN
+    prices_split ps ON mgs.game_id = ps.game_id AND mgs.team_name = ps.team_name
+ORDER BY game_id, team_name, bookmaker
+ON CONFLICT (game_id, team_name, bookmaker)
+DO NOTHING
+;
+
+UPDATE profits
+SET winnings = CASE
+    WHEN price < 0 THEN ROUND((100.0 / ABS(price)) * 10, 2)
+    ELSE ROUND((price / 100.0) * 10, 2)
+END;
+
