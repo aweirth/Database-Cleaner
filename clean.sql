@@ -130,7 +130,8 @@ DO NOTHING
 
 UPDATE profits
 SET winnings = CASE
-    WHEN price < 0 THEN ROUND((100.0 / ABS(price)) * 10, 2)
-    ELSE ROUND((price / 100.0) * 10, 2)
+    WHEN is_winner AND price < 0 THEN ((100.0 / ABS(price)) * 10) + 10
+    WHEN is_winner AND price >= 0 THEN (price / 100.0) * 10
+    ELSE -10
 END;
 
