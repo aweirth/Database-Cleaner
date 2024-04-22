@@ -137,3 +137,9 @@ SET winnings = CASE
     ELSE -10
 END;
 
+UPDATE profits
+SET game_type = CASE 
+                    WHEN game_type = 'R' THEN 'Regular Season'
+                    WHEN game_type = 'S' THEN 'Spring Training'
+                    ELSE game_type
+                END;
