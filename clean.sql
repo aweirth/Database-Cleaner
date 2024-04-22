@@ -104,11 +104,13 @@ DO NOTHING
 ;
 
 INSERT INTO prices_split
-SELECT game_id, away_team AS team_name, bookmaker, team_1_price AS price
+SELECT game_id, commence_time_pst, team_name_1 AS team_name, bookmaker, team_1_price AS price
 FROM prices
 UNION ALL
-SELECT game_id, home_team AS team_name, bookmaker, team_2_price AS price
+SELECT game_id, commence_time_pst, team_name_2 AS team_name, bookmaker, team_2_price AS price
 FROM prices
+ON CONFLICT (game_id, team_name, bookmaker)
+DO NOTHING
 ;
 
 INSERT INTO profits
