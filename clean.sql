@@ -132,7 +132,7 @@ DO NOTHING
 
 UPDATE profits
 SET winnings = CASE
-    WHEN is_winner AND price < 0 THEN ((100.0 / ABS(price)) * 10)
+    WHEN is_winner AND price < 0 THEN ((100.0 / ABS(price)) * 10) + 10
     WHEN is_winner AND price >= 0 THEN (price / 100.0) * 10
     ELSE -10
 END;
